@@ -12,6 +12,7 @@
 
 //############## CONFIGURATION -- EDIT ME ##################
 
+// ### Dust Sensor
 // Tuning params for Sharp Dust Sensor
 #define        COV_RATIO                       0.2            //ug/mmm / mv
 #define        NO_DUST_VOLTAGE                 400            //mv
@@ -21,6 +22,12 @@
 const int iled = 7; // The yellow wire
 const int vout = 0; // The... what color is that? wire (AOUT on the board)
 
+// ### MQ-135 "air quality" sensor
+
+int mq135_pin = 1; // The analog output of MQ-135 goes here
+// NOTE: You must set the calibration value RZERO in MQ135.h!
+
+// ### Comms and misc settings
 // The i2c address of this board
 #define MY_I2C_ADDR 69
 
@@ -31,7 +38,9 @@ double lon = -119.8427564;
 // ################ END CONFIGURATION ###############
 
 #include <ArduinoJson.h> // Oh yeah, we're doing that.  Get ready...
+                         // https://github.com/bblanchon/ArduinoJson
 #include <Wire.h> // Man, I feel really pro using I2C for a project now...
+#include <MQ135.h> // https://github.com/GeorgK/MQ135
 
 //---------- This part borrowed from WaveShare's implementation
 // For the dust sensor:
@@ -113,15 +122,25 @@ float dust_sensor_read() {
 }
 // ---------- End Dust Sensor Stuff
 
-// Main Init Function
+// ---------- MQ-135 stuff
+
+MQ135 gasSensor = MQ135(mq135_pin);
+
+
+// -------------- Main Init Function
 void setup() {
   Serial.begin(9600);
   Serial.println("### SensorThingy v0 BOOT:");
+
+  Serial.println("Dust sensor init...");
   dust_sensor_init();
+
+  Serial.println("Gas sensor init...");
+  gasSensor = MQ135(mq135_pin);
   
   // Bring up I2C. Do this last
+  Serial.println("I2C init... Address " + String(MY_I2C_ADDR));
   Wire.begin(MY_I2C_ADDR);
-  Serial.println("I2C Address: " + String(MY_I2C_ADDR));
   Wire.onRequest(requestEvent); // register event
   Serial.println("Waiting for Master...");
 }
@@ -137,7 +156,7 @@ void get_sensor_json(char* buf) {
   data["lat"] = lat;
   data["lon"] = lon;
   data["dust"] = dust_sensor_read();
-  data["air_quality"] = 0.6969; // TODO: FAKE
+  data["air_quality"] = gasSensor.getPPM();
   data.prettyPrintTo(buf, 200);
 }
 
