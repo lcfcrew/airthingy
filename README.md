@@ -22,7 +22,7 @@ NOTE: you absolutely NEED a real external 5V PSU, because the MQ-135 will blow u
 
 ## Setup
 
-1. Connect the VIN/GND of the Arduino and ESP8266 to 5V on your PSU.  Similarly, connect VCC and GND on the Dust Sensor, Humidity Sensor, and MQ-135 to 5V and GND on the PSU.
+1. Connect the VIN/GND of the Arduino and ESP8266 to 5V/GND on your PSU.  Similarly, connect VCC and GND on the Dust Sensor, Humidity Sensor, and MQ-135 to 5V and GND on the PSU.
 
 2. Connect the ILED pin of the Dust Sensor to Pin 7 on the Arduino
 
