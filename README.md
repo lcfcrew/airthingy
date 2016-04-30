@@ -23,7 +23,7 @@ NOTE: you absolutely NEED a real external 5V PSU, because the MQ-135 will blow u
 
 ## Setup for Edison / PC
 
-0. For Edison, flash Linux onto your board.  For more information, see
+0. For Edison, flash Linux onto your board.  For more information, see https://learn.sparkfun.com/tutorials/loading-debian-ubilinux-on-the-edison
 
 1. Connect the Arduino to the Edison or PC via USB (or Serial)
 
