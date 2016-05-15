@@ -15,15 +15,14 @@
 #include <Wire.h> //This sketch has a very dominant personality
 #include <ArduinoJson.h> //Why am I doing JSON over I2C? I dunno really...
 
-const char* ssid = "NETGEAR69";
-const char* password = "roundwater015";
+const char* ssid = "SSID";
+const char* password = "fuckyou123";
 
 // The master polling interval
 const int interval = 6000;
 
 // Send the data here
-#define API_ENDPOINT "http://openair.zidraw.net/api/sensor"
-const int httpsPort = 80;
+#define API_ENDPOINT "http://airchecknasa.com/api/v1/data_points/"
 
 // TODO: This
 // Use web browser to view and copy
@@ -106,33 +105,47 @@ int getNTPTime() {
   }
 }
 
-void getSensorData(char* data,int len) {
-  Serial.println("Polling slave for data");
-  int count = 0;
-  Wire.requestFrom(69, 200);    // request 6 bytes from slave device #8
-  while (Wire.available() && (count < len)) { // slave may send less than requested
-    data[count] = Wire.read();
-    count++;
-  }
-  Serial.println("Got bytes from slave: " + String(count));
-  
-
-}
-
 
 // Do a POST with some JSON
-void doPost(char* data) {
-  
+void doPost(String data) {
+
   Serial.print("requesting URL: ");
   Serial.println(API_ENDPOINT);
   HTTPClient http;
   http.begin(API_ENDPOINT);
   http.setUserAgent("AirThingy/v0");
-  http.POST(data);
-  
+  http.addHeader("Content-Type","application/json",false);
+  int code = http.POST(data);
+  String resp = http.getString();
+  Serial.println(String(String(code) + ": " + resp));
   
 }
 
+
+int done = 0;
+int len = 0;
+char msgbuf[200];
+
+// function that executes whenever data is received from master
+// this function is registered as an event, see setup()
+void receiveEvent(int howMany) {
+  
+  Serial.println("Got i2c Event");
+  if (done == 1) {
+    done = 0;
+    len = 0;
+  }
+  while (Wire.available()) { // loop through all 
+    char c = Wire.read(); // receive byte as a character
+    msgbuf[len] = c;         // print the character
+    if (c == '\0') {
+      done = 1;
+      Serial.println("Done");
+      //Serial.print(msgbuf);
+    }
+    len++;
+  }
+}
 
 void setup() {
   Serial.begin(115200);
@@ -153,25 +166,17 @@ void setup() {
   Serial.println(udp.localPort());
   getNTPTime();
   Serial.println("[i2c] Bringing up I2C Master...");
-  Wire.begin();
+  Wire.begin(8);
+  Wire.onReceive(receiveEvent);
 }
 
 void loop() {
   // Every n seconds, poll the slave for sensor data
-  char data[200];
-  getSensorData(data,200);
-  StaticJsonBuffer<200> jsonBuffer;
-  JsonObject& root = jsonBuffer.parseObject(data);
-  if (!root.success())
-  {
-    Serial.println("[json] parseObject() failed -- bad data");
-    return;
-  }
-  root["sensor_id"] = "AirThingy";
-  root["timestamp"] = getNTPTime();
-  root.printTo(data,sizeof(data));
-  doPost(data);
-  delay(interval);
+  //char data[200];
+  delay(100);
+  //String fake1 = " {\"type\": \"dust\", \"value\": \"5.4535\", \"date\": \"2016-04-20T04:05:59\", \"latitude\": \"11.2342342\", \"longitude\": \"21.534534\"}";
+  //doPost(fake1);
+  //delay(interval);
 }
 
 
